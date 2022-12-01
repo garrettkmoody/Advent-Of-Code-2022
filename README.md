@@ -1,5 +1,5 @@
 # Advent-Of-Code-2022
-Get more stars than Matthew
+Goal: Get more stars than Matthew
 
 # Setup
 
