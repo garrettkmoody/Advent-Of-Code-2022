@@ -7,7 +7,7 @@ def part1():
     with open('input.txt') as f:
         line = f.readline()
       
-        uniqueSet = [line[0], line[1], line[2]]
+        uniqueSet = list(line[:3])
         for i in range(3, len(line)):
             uniqueSet.append(line[i])
             done = False
@@ -19,7 +19,7 @@ def part1():
                         uniqueSet.pop(0)
                         done = True
                         break
-            
+    
             if done == False:
                 print("Solution to Part 1: {}".format(i + 1))
                 break
@@ -29,11 +29,7 @@ def part2():
 
     with open('input.txt') as f:
         line = f.readline()
-
-        
-        uniqueSet = []
-        for let in line[:13]:
-            uniqueSet.append(let)
+        uniqueSet = list(line[:13])
     
         for i in range(3, len(line)):
             uniqueSet.append(line[i])
@@ -48,7 +44,7 @@ def part2():
                         break
             
             if done == False:
-                print("Solution to Part 1: {}".format(i + 1))
+                print("Solution to Part 2: {}".format(i + 1))
                 break
     
 
