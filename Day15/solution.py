@@ -1,5 +1,5 @@
 def main():
-    # part1()
+    part1()
     part2()
 
 
@@ -84,13 +84,13 @@ def part2():
         print('ran')
         for manhat, s1, s2 in manhats:
             deletedCoords = []
-            
             for coord in targetCoords:
                 currentManhat = abs(s1 - coord[0]) + abs(s2 - coord[1])
                 if currentManhat <= manhat:
                     deletedCoords.append(coord)
             
-            
+            for coord in deletedCoords:
+                targetCoords.remove(coord)
 
             print(len(targetCoords))
 
