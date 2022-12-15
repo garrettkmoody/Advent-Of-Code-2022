@@ -1,5 +1,5 @@
 def main():
-    part1()
+    # part1()
     part2()
 
 
@@ -79,27 +79,25 @@ def part2():
 
                 offset -= 1
 
-            print("Loop")
-        print(len(targetCoords))
-        print('ran')
-        for manhat, s1, s2 in manhats:
-            deletedCoords = []
-            for coord in targetCoords:
-                currentManhat = abs(s1 - coord[0]) + abs(s2 - coord[1])
-                if currentManhat <= manhat:
-                    deletedCoords.append(coord)
-            
-            for coord in deletedCoords:
-                targetCoords.remove(coord)
-
-            print(len(targetCoords))
-
+            print("Adding Potential Coordinates")
+        print("Preparing to search",len(targetCoords),"coordinates ;(")
         finalAnswer = 0
-        for goodCoord in targetCoords:
-            finalAnswer = goodCoord[0]*4000000+goodCoord[1]
+        for i, coord in enumerate(targetCoords):
+            if i % 1000000 == 0:
+                print("Searched",i,"coordinates...")
+            if potentialCoord(coord, manhats):
+                finalAnswer = coord[0]*4000000+coord[1]
+                break
 
     print("Solution to Part 2: {}".format(finalAnswer))
 
+
+def potentialCoord(coord, manhats):
+    for manhat, s1, s2 in manhats:
+        currentManhat = abs(s1 - coord[0]) + abs(s2 - coord[1])
+        if currentManhat <= manhat:
+            return False
+    return True
 
 if __name__ == '__main__':
     main()
