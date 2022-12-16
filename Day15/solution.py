@@ -37,13 +37,12 @@ def part1():
                     cantBlocks += 1
     print("Solution to Part 1: {}".format(cantBlocks))
 
-
 def part2():
 
     with open('input.txt') as f:
         lines = f.readlines()
-        targetCoords = []
         manhats = []
+
         for line in lines:
             sensor, beacon = line.split(':')
             sensor = sensor.split()
@@ -56,50 +55,22 @@ def part2():
 
             manhat = abs(s1 - b1) + abs(s2 - b2)
             manhats.append((manhat, s1, s2))
-            offset = 0
-            for i in range(s2 - manhat - 1, s2):
-                if offset == 0:
-                    if s1 <= 4000000 and s1 >= 0 and i <= 4000000 and i >= 0:
-                        targetCoords.append((s1, i))
-                else:
-                    if s1 - offset <= 4000000 and s1 - offset >= 0 and i <= 4000000 and i >= 0:
-                        targetCoords.append((s1 - offset, i))
-                    if s1 + offset <= 4000000 and s1 + offset >= 0 and i <= 4000000 and i >= 0:
-                        targetCoords.append((s1 + offset, i))
-
-                offset += 1
-
-            for i in range(s2, s2 + manhat + 2):
-                if offset == 0:
-                    if s1 <= 4000000 and s1 >= 0 and i <= 4000000 and i >= 0:
-                        targetCoords.append((s1, i))
-                else:
-                    if s1 - offset <= 4000000 and s1 - offset >= 0 and i <= 4000000 and i >= 0:
-                        targetCoords.append((s1 - offset, i))
-                    if s1 + offset <= 4000000 and s1 + offset >= 0 and i <= 4000000 and i >= 0:
-                        targetCoords.append((s1 + offset, i))
-
-                offset -= 1
-
-            print("Adding Potential Coordinates")
-        print("Preparing to search", len(targetCoords), "coordinates ;(")
-
+        
         num_cpus = mp.cpu_count()
-        pool = mp.Pool(num_cpus)
         manager = mp.Manager()
+
+        poolSearch = mp.Pool(num_cpus)
         answer = manager.dict()
-        partitions = list(split(targetCoords, num_cpus))
-      
+        
+        partitions = list(split(manhats, num_cpus))
         for partition in partitions:
-            pool.apply_async(searchCoordinates, args=(partition, manhats, answer))
+            poolSearch.apply_async(searchCoordinates, args=(partition, manhats, answer))
     
-        pool.close()
+        poolSearch.close()
         while len(answer) == 0:
             pass
-        pool.terminate()  
-
-    
-
+        poolSearch.terminate()
+        print("Solution to Part 2: {}".format(answer["answer"]))
 
 def potentialCoord(coord, manhats):
     for manhat, s1, s2 in manhats:
@@ -112,13 +83,48 @@ def split(a, n):
     k, m = divmod(len(a), n)
     return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
 
-def searchCoordinates(targetCoords, manhats, answer):
-    for coord in targetCoords:
-        if potentialCoord(coord, manhats):
-            finalAnswer = coord[0]*4000000+coord[1]
-            print("Solution to Part 2: {}".format(finalAnswer))
-            answer["answer"] = finalAnswer
-            break
+def searchCoordinates(partition, manhats, answer):
+    for manhat,s1,s2 in partition:
+        offset = 0
+        for i in range(s2 - manhat - 1, s2):
+            if offset == 0:
+                if s1 <= 4000000 and s1 >= 0 and i <= 4000000 and i >= 0:
+                    if potentialCoord((s1, i), manhats):
+                        finalAnswer = s1*4000000+i
+                        answer["answer"] = finalAnswer
+                        return
+            else:
+                if s1 - offset <= 4000000 and s1 - offset >= 0 and i <= 4000000 and i >= 0:
+                    if potentialCoord((s1 - offset, i), manhats):
+                        finalAnswer = (s1 - offset)*4000000+i
+                        answer["answer"] = finalAnswer
+                        return
+                if s1 + offset <= 4000000 and s1 + offset >= 0 and i <= 4000000 and i >= 0:
+                    if potentialCoord((s1 + offset, i), manhats):
+                        finalAnswer = (s1 + offset)*4000000+i
+                        answer["answer"] = finalAnswer
+                        return
+            offset += 1
+
+        for i in range(s2, s2 + manhat + 2):
+            if offset == 0:
+                if s1 <= 4000000 and s1 >= 0 and i <= 4000000 and i >= 0:
+                    if potentialCoord((s1, i), manhats):
+                        finalAnswer = s1*4000000+i
+                        answer["answer"] = finalAnswer
+                        return
+            else:
+                if s1 - offset <= 4000000 and s1 - offset >= 0 and i <= 4000000 and i >= 0:
+                    if potentialCoord((s1 - offset, i), manhats):
+                        finalAnswer = (s1 - offset)*4000000+i
+                        answer["answer"] = finalAnswer
+                        return
+                if s1 + offset <= 4000000 and s1 + offset >= 0 and i <= 4000000 and i >= 0:
+                    if potentialCoord((s1 + offset, i), manhats):
+                        finalAnswer = (s1 + offset)*4000000+i
+                        answer["answer"] = finalAnswer
+                        return
+            offset -= 1
 
 if __name__ == '__main__':
     main()
