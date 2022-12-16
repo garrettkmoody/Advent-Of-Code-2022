@@ -1,3 +1,5 @@
+import multiprocessing as mp
+
 def main():
     part1()
     part2()
@@ -40,7 +42,7 @@ def part2():
 
     with open('input.txt') as f:
         lines = f.readlines()
-        targetCoords = set([])
+        targetCoords = []
         manhats = []
         for line in lines:
             sensor, beacon = line.split(':')
@@ -53,43 +55,50 @@ def part2():
             b2 = int(b2.split('=')[1])
 
             manhat = abs(s1 - b1) + abs(s2 - b2)
-            manhats.append((manhat,s1,s2))
+            manhats.append((manhat, s1, s2))
             offset = 0
             for i in range(s2 - manhat - 1, s2):
                 if offset == 0:
                     if s1 <= 4000000 and s1 >= 0 and i <= 4000000 and i >= 0:
-                        targetCoords.add((s1, i))
+                        targetCoords.append((s1, i))
                 else:
                     if s1 - offset <= 4000000 and s1 - offset >= 0 and i <= 4000000 and i >= 0:
-                        targetCoords.add((s1 - offset, i))
+                        targetCoords.append((s1 - offset, i))
                     if s1 + offset <= 4000000 and s1 + offset >= 0 and i <= 4000000 and i >= 0:
-                        targetCoords.add((s1 + offset, i))
+                        targetCoords.append((s1 + offset, i))
 
                 offset += 1
 
             for i in range(s2, s2 + manhat + 2):
                 if offset == 0:
                     if s1 <= 4000000 and s1 >= 0 and i <= 4000000 and i >= 0:
-                        targetCoords.add((s1, i))
+                        targetCoords.append((s1, i))
                 else:
                     if s1 - offset <= 4000000 and s1 - offset >= 0 and i <= 4000000 and i >= 0:
-                        targetCoords.add((s1 - offset, i))
+                        targetCoords.append((s1 - offset, i))
                     if s1 + offset <= 4000000 and s1 + offset >= 0 and i <= 4000000 and i >= 0:
-                        targetCoords.add((s1 + offset, i))
+                        targetCoords.append((s1 + offset, i))
 
                 offset -= 1
 
             print("Adding Potential Coordinates")
-        print("Preparing to search",len(targetCoords),"coordinates ;(")
-        finalAnswer = 0
-        for i, coord in enumerate(targetCoords):
-            if i % 1000000 == 0:
-                print("Searched",i,"coordinates...")
-            if potentialCoord(coord, manhats):
-                finalAnswer = coord[0]*4000000+coord[1]
-                break
+        print("Preparing to search", len(targetCoords), "coordinates ;(")
 
-    print("Solution to Part 2: {}".format(finalAnswer))
+        num_cpus = mp.cpu_count()
+        pool = mp.Pool(num_cpus)
+        manager = mp.Manager()
+        answer = manager.dict()
+        partitions = list(split(targetCoords, num_cpus))
+      
+        for partition in partitions:
+            pool.apply_async(searchCoordinates, args=(partition, manhats, answer))
+    
+        pool.close()
+        while len(answer) == 0:
+            pass
+        pool.terminate()  
+
+    
 
 
 def potentialCoord(coord, manhats):
@@ -98,6 +107,18 @@ def potentialCoord(coord, manhats):
         if currentManhat <= manhat:
             return False
     return True
+
+def split(a, n):
+    k, m = divmod(len(a), n)
+    return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
+
+def searchCoordinates(targetCoords, manhats, answer):
+    for coord in targetCoords:
+        if potentialCoord(coord, manhats):
+            finalAnswer = coord[0]*4000000+coord[1]
+            print("Solution to Part 2: {}".format(finalAnswer))
+            answer["answer"] = finalAnswer
+            break
 
 if __name__ == '__main__':
     main()
