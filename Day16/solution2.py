@@ -17,11 +17,46 @@ def part1():
             adjMatrix[seg1[1]] = [valve.strip().replace(',','') for valve in seg2.split()[4:]]
             flowDict[seg1[1]] = int(seg1[4].split('=')[1])
         
-        reduceGraph(adjMatrix, flowDict)
-        # print(adjMatrix)
-        # print(flowDict)
-            
-   
+        newGraph = reduceGraph(adjMatrix, flowDict)
+        scores = []
+        time = 29
+        visited = set(['AA'])
+        currentValve = 'AA'
+        
+        while True:
+            if time <= 0:
+                break
+            for key in newGraph[currentValve]:
+                if key in visited or key == currentValve:
+                    continue
+                
+                tempTime = time
+                tempScore = 0
+                expectedValue = (tempTime - newGraph[currentValve][key]) * flowDict[key]
+               
+                #time elapsed
+                tempTime -= newGraph[currentValve][key] + 1
+
+                tempScore += expectedValue
+                
+                tempScore += max([(tempTime - newGraph[key][x]) * flowDict[x] for x in newGraph[key] if x not in visited and key != x])
+                
+                scores.append((key, tempScore))
+            if currentValve == 'DD':
+                print(scores)
+            chosenPath = None
+            maxScore = 0
+            for i in range(len(scores)):
+                if scores[i][1] > maxScore:
+                    maxScore = scores[i][1]
+                    chosenPath = scores[i][0]
+            scores.clear()
+            time -= newGraph[currentValve][chosenPath] + 1
+            print(time)
+            currentValve = chosenPath
+            visited.add(currentValve)
+            print(currentValve)
+        
 
     print("Solution to Part 1: {}".format(prio))
 

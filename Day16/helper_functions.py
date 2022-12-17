@@ -1,34 +1,21 @@
 #reduce graph
 def reduceGraph(adjMatrix, flowDict):
-    # badKeys = []
-    # for key in adjMatrix:
-    #     if key != 'AA' and flowDict[key] == 0:
-    #         for i in range(len(adjMatrix[key])-1):
-    #             for j in range(i + 1, len(adjMatrix[key])):
-    #                 leftValve = adjMatrix[key][i]
-    #                 rightValve = adjMatrix[key][j]
-    #                 newDistance = leftValve[1] + rightValve[1]
-    #                 found = False
-    #                 for z, valve in enumerate(adjMatrix[leftValve[0]]):
-    #                     if valve[0] == rightValve[0] and valve[1] > newDistance:
-    #                         found = True
-    #                         adjMatrix[leftValve[0]][z] = (rightValve[0], newDistance)
-    #                         adjMatrix[leftValve[0]] = [x for x in adjMatrix[leftValve[0]] if x[0] != key]
-    #                         for x, valve in enumerate(adjMatrix[rightValve[0]]):
-    #                             if valve[0] == leftValve[0]:
-    #                                 adjMatrix[rightValve[0]][x] = (leftValve[0], newDistance)
-    #                                 adjMatrix[rightValve[0]] = [x for x in adjMatrix[rightValve[0]] if x[0] != key]
-    #                 if not found:
-    #                     adjMatrix[leftValve[0]].append((rightValve[0], newDistance))
-    #                     adjMatrix[rightValve[0]].append((leftValve[0], newDistance))
-    #                     adjMatrix[leftValve[0]] = [x for x in adjMatrix[leftValve[0]] if x[0] != key]
-    #                     adjMatrix[rightValve[0]] = [x for x in adjMatrix[rightValve[0]] if x[0] != key]
-    #         badKeys.append(key)
-    # for key in badKeys:
-    #     del adjMatrix[key]
-    
-    print(dijkstra_algorithm(adjMatrix, 'AA'))
 
+    zeroKeys = [x for x in adjMatrix.keys() if flowDict[x] == 0]
+    
+    distancesDict = {}
+    distancesDict['AA'] = dijkstra_algorithm(adjMatrix, 'AA')[1]
+    for key in [key for key in adjMatrix.keys() if flowDict[key] > 0]:
+        distancesDict[key] = dijkstra_algorithm(adjMatrix, key)[1]
+    for key in distancesDict:
+        for zeroKey in zeroKeys:
+            if zeroKey in distancesDict[key]:
+                del distancesDict[key][zeroKey]
+    
+    for key in distancesDict:
+        print(distancesDict[key])
+
+    return distancesDict
 
 def dijkstra_algorithm(graph, start_node):
     unvisited_nodes = list(graph.keys())
