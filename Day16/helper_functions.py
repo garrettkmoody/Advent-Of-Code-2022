@@ -11,9 +11,7 @@ def reduceGraph(adjMatrix, flowDict):
         for zeroKey in zeroKeys:
             if zeroKey in distancesDict[key]:
                 del distancesDict[key][zeroKey]
-    
-    for key in distancesDict:
-        print(distancesDict[key])
+
 
     return distancesDict
 

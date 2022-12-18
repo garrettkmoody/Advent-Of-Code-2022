@@ -1,8 +1,8 @@
 from helper_functions import *
 
 def main():
-    part1()
-    # part2()
+    # part1()
+    part2()
 
 def part1():
 
@@ -19,65 +19,154 @@ def part1():
         
         newGraph = reduceGraph(adjMatrix, flowDict)
         scores = []
-        time = 29
-        visited = set(['AA'])
-        currentValve = 'AA'
         
-        while True:
-            if time <= 0:
-                break
-            for key in newGraph[currentValve]:
-                if key in visited or key == currentValve:
-                    continue
-                
-                tempTime = time
-                tempScore = 0
-                expectedValue = (tempTime - newGraph[currentValve][key]) * flowDict[key]
-               
-                #time elapsed
-                tempTime -= newGraph[currentValve][key] + 1
+        paths = []
+        findPaths(['AA'], newGraph, set(['AA']), flowDict, paths, 29)
+        print(len(paths))
+        answer = max([simulatePath(path, flowDict, newGraph) for path in paths])
 
-                tempScore += expectedValue
-                
-                tempScore += max([(tempTime - newGraph[key][x]) * flowDict[x] for x in newGraph[key] if x not in visited and key != x])
-                
-                scores.append((key, tempScore))
-            if currentValve == 'DD':
-                print(scores)
-            chosenPath = None
-            maxScore = 0
-            for i in range(len(scores)):
-                if scores[i][1] > maxScore:
-                    maxScore = scores[i][1]
-                    chosenPath = scores[i][0]
-            scores.clear()
-            time -= newGraph[currentValve][chosenPath] + 1
-            print(time)
-            currentValve = chosenPath
-            visited.add(currentValve)
-            print(currentValve)
-        
+    print("Solution to Part 1: {}".format(answer))
 
-    print("Solution to Part 1: {}".format(prio))
+def findPaths(currentPath, newGraph, visited, flowDict, paths, time):
 
-# def part2():
-
-#     with open('input.txt') as f:
-#         lines = f.readlines()
-#         prio = 0
-#         for line in lines:
-#             elf1, elf2 = line.split(',')
-#             elf1 = elf1.split('-')
-#             elf2 = elf2.split('-')
-       
-#             if int(elf1[0]) <= int(elf2[0]) and int(elf2[0]) <= int(elf1[1]):
-#                 prio += 1
-#             elif int(elf2[0]) <= int(elf1[0]) and int(elf1[0]) <= int(elf2[1]):
-#                 prio += 1
-            
+    currentValve = currentPath[-1]
+    
+    if len(currentPath) == len(newGraph):
+        paths.append(currentPath)
+        return
    
+    biggestScore = max([(time - newGraph[currentValve][x]) * flowDict[x] for x in newGraph[currentValve] if x not in visited])
+    if biggestScore < 1:
+        paths.append(currentPath)
+        return
+    for key in newGraph[currentValve]:
+        if key not in visited and (time - newGraph[currentValve][key]) * flowDict[key] > biggestScore / 100:
+            updatedVisited = set(visited)
+            updatedVisited.add(key)
+            updatedPath = list(currentPath)
+            updatedPath.append(key)  
+            tempTime = time - (newGraph[currentValve][key] + 1)
+    
+            
+            findPaths(updatedPath, newGraph, updatedVisited, flowDict, paths, tempTime)
 
-#     print("Solution to Part 2: {}".format(prio))
+
+def simulatePath(path, flowDict, newGraph):
+    time = 29
+    score = 0
+    previousValve = 'AA'
+    for valve in path:
+        if valve == 'AA':
+            continue
+        flow = flowDict[valve]
+        distance = newGraph[previousValve][valve]
+        if (time - distance) * flow < 1:
+            break
+        score += (time - distance) * flow
+        time -= distance + 1
+        previousValve = valve
+
+    return score
+
+def simulatePath2(path,path2,flowDict,newGraph):
+    time = 25
+    score = 0
+    previousValve = 'AA'
+
+    visited = set([])
+    for valve in path:
+        if valve == 'AA':
+            continue
+        flow = flowDict[valve]
+        distance = newGraph[previousValve][valve]
+        if (time - distance) * flow < 1:
+            break
+        if valve not in visited:
+            if time < 17:
+                break
+            score += (time - distance) * flow
+            visited.add(valve)
+        time -= distance + 1
+        previousValve = valve
+    
+    time = 25
+    previousValve = 'AA'
+    for valve in path2:
+        if valve == 'AA':
+            continue
+        flow = flowDict[valve]
+        distance = newGraph[previousValve][valve]
+        if (time - distance) * flow < 1:
+            break
+        if valve not in visited:
+            score += (time - distance) * flow
+            visited.add(valve)
+        time -= distance + 1
+        previousValve = valve
+
+    return score
+
+def findPaths2(currentPath, newGraph, visited, flowDict, paths, time):
+
+    currentValve = currentPath[-1]
+    
+    if len(currentPath) == len(newGraph):
+        paths.append(currentPath)
+        return
+   
+    biggestScore = max([(time - newGraph[currentValve][x]) * flowDict[x] for x in newGraph[currentValve] if x not in visited])
+    if biggestScore < 1:
+        paths.append(currentPath)
+        return
+    for key in newGraph[currentValve]:
+        if key not in visited:
+            updatedVisited = set(visited)
+            updatedVisited.add(key)
+            updatedPath = list(currentPath)
+            updatedPath.append(key)  
+            tempTime = time - (newGraph[currentValve][key] + 1)
+    
+            
+            findPaths2(updatedPath, newGraph, updatedVisited, flowDict, paths, tempTime)
+
+def part2():
+
+    with open('input.txt') as f:
+        lines = f.readlines()
+        prio = 0
+        adjMatrix = {}
+        flowDict = {}
+        for line in lines:
+            seg1, seg2 = line.split(';')
+            seg1 = seg1.split()
+            adjMatrix[seg1[1]] = [valve.strip().replace(',','') for valve in seg2.split()[4:]]
+            flowDict[seg1[1]] = int(seg1[4].split('=')[1])
+        
+        newGraph = reduceGraph(adjMatrix, flowDict)
+        scores = []
+        
+        paths = []
+
+        findPaths2(['AA'], newGraph, set(['AA']), flowDict, paths, 29)
+        
+        
+        print(len(paths))
+        
+        maxScore = 0
+        for i in range(len(paths) - 1):
+            for j in range(i + 1, len(paths)):
+                maxScore = max(maxScore, simulatePath2(paths[i], paths[j], flowDict, newGraph))
+                # maxScore = max(maxScore, simulatePath2(paths[j], paths[i], flowDict, newGraph))  
+            if i % 100 == 0:
+                print('ran')
+        
+        print(maxScore)
+            
+        
+        
+        answer = max([simulatePath(path, flowDict, newGraph) for path in paths])
+
+    print("Solution to Part 2: {}".format(answer))
 
 if __name__ == '__main__':
     main()
