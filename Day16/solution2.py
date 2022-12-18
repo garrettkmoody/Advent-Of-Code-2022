@@ -1,4 +1,5 @@
 from helper_functions import *
+import multiprocessing as mp
 
 def main():
     # part1()
@@ -70,39 +71,42 @@ def simulatePath(path, flowDict, newGraph):
 
 def simulatePath2(path,path2,flowDict,newGraph):
     time = 25
+    time2 = 25
+    p1 = 1
+    p2 = 1
     score = 0
-    previousValve = 'AA'
-
+    previousValve1 = 'AA'
+    previousValve2 = 'AA'
     visited = set([])
-    for valve in path:
-        if valve == 'AA':
-            continue
-        flow = flowDict[valve]
-        distance = newGraph[previousValve][valve]
-        if (time - distance) * flow < 1:
+    while True:
+        if p1 >= len(path) and p2 >= len(path2):
             break
-        if valve not in visited:
-            if time < 17:
+        if time >= time2 and p1 < len(path):
+            valve = path[p1]
+            p1 += 1
+            if valve in visited:
                 break
+            flow = flowDict[valve]
+            distance = newGraph[previousValve1][valve]
             score += (time - distance) * flow
+            time -= distance + 1
             visited.add(valve)
-        time -= distance + 1
-        previousValve = valve
-    
-    time = 25
-    previousValve = 'AA'
-    for valve in path2:
-        if valve == 'AA':
-            continue
-        flow = flowDict[valve]
-        distance = newGraph[previousValve][valve]
-        if (time - distance) * flow < 1:
+            previousValve1 = valve
+           
+        elif p2 < len(path2):
+            valve = path2[p2]
+            p2 += 1
+            if valve in visited:
+                break
+            flow = flowDict[valve]
+            distance = newGraph[previousValve2][valve]
+            score += (time2 - distance) * flow
+            time2 -= distance + 1
+            visited.add(valve)
+            previousValve2 = valve
+        else:
             break
-        if valve not in visited:
-            score += (time - distance) * flow
-            visited.add(valve)
-        time -= distance + 1
-        previousValve = valve
+            
 
     return score
 
@@ -110,7 +114,7 @@ def findPaths2(currentPath, newGraph, visited, flowDict, paths, time):
 
     currentValve = currentPath[-1]
     
-    if len(currentPath) == len(newGraph):
+    if len(currentPath) == len(newGraph) // 2 + 1:
         paths.append(currentPath)
         return
    
@@ -119,7 +123,7 @@ def findPaths2(currentPath, newGraph, visited, flowDict, paths, time):
         paths.append(currentPath)
         return
     for key in newGraph[currentValve]:
-        if key not in visited:
+        if key not in visited and (time - newGraph[currentValve][key]) * flowDict[key] > biggestScore / 10:
             updatedVisited = set(visited)
             updatedVisited.add(key)
             updatedPath = list(currentPath)
@@ -128,6 +132,17 @@ def findPaths2(currentPath, newGraph, visited, flowDict, paths, time):
     
             
             findPaths2(updatedPath, newGraph, updatedVisited, flowDict, paths, tempTime)
+
+def comparePaths(paths, i, flowDict, newGraph, maxScores):
+    tempScore = 0
+    for j in range(i + 1, len(paths)):
+        # if 'AADDHHEE' in "".join(paths[i]) and 'AAJJBBCC' in "".join(paths[j]):
+        #     print(simulatePath2(paths[i], paths[j], flowDict, newGraph))
+        tempScore = max(tempScore, simulatePath2(paths[i], paths[j], flowDict, newGraph))
+        # maxScore = max(maxScore, simulatePath2(paths[j], paths[i], flowDict, newGraph))  
+    maxScores.append(tempScore)
+    if i % 50 == 0:
+        print(i)
 
 def part2():
 
@@ -147,26 +162,25 @@ def part2():
         
         paths = []
 
-        findPaths2(['AA'], newGraph, set(['AA']), flowDict, paths, 29)
+        findPaths2(['AA'], newGraph, set(['AA']), flowDict, paths, 25)
         
         
         print(len(paths))
         
-        maxScore = 0
-        for i in range(len(paths) - 1):
-            for j in range(i + 1, len(paths)):
-                maxScore = max(maxScore, simulatePath2(paths[i], paths[j], flowDict, newGraph))
-                # maxScore = max(maxScore, simulatePath2(paths[j], paths[i], flowDict, newGraph))  
-            if i % 100 == 0:
-                print('ran')
-        
-        print(maxScore)
-            
-        
-        
-        answer = max([simulatePath(path, flowDict, newGraph) for path in paths])
+        print("cpus", mp.cpu_count())
 
-    print("Solution to Part 2: {}".format(answer))
+        num_cores = mp.cpu_count()
+        pool = mp.Pool(num_cores)
+        maxScores = mp.Manager().list()
+
+        for i in range(len(paths) - 1):
+            pool.apply_async(comparePaths(paths, i, flowDict, newGraph, maxScores))
+
+        pool.close()
+        pool.join()
+            
+
+    print("Solution to Part 2: {}".format(max(maxScores)))
 
 if __name__ == '__main__':
     main()
